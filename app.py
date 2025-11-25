@@ -35,44 +35,18 @@ def playwright_worker():
     """Worker thread that handles all Playwright operations"""
     global browser, page, playwright_instance, context, latest_screenshot
 
-    import subprocess
-    import os
-
-    # Start Xvfb virtual display
-    xvfb = subprocess.Popen(
-        [
-            "Xvfb",
-            ":99",
-            "-screen",
-            "0",
-            "1920x1080x24",
-            "-ac",  # Disable access control
-            "+extension",
-            "GLX",  # Enable OpenGL
-        ]
-    )
-    os.environ["DISPLAY"] = ":99"
-
-    time.sleep(2)  # Give Xvfb time to start
-
     playwright_instance = sync_playwright().start()
-    browser = playwright_instance.chromium.launch(
-        headless=False,  # MUST be False with Xvfb
-        args=[
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--use-gl=swiftshader",  # CPU-based WebGL
-            "--enable-webgl",
-            "--ignore-gpu-blocklist",
-            "--disable-gpu",  # Force software rendering
-            "--disable-software-rasterizer",  # But allow SwiftShader
-        ],
+    browser = playwright_instance.firefox.launch(
+        headless=True,
+        firefox_user_prefs={
+            "media.volume_scale": "0.0",  # Mute all audio
+        },
     )
     context = browser.new_context(
         viewport={"width": WINDOW_WIDTH, "height": WINDOW_HEIGHT}
     )
     page = context.new_page()
-    page.goto(TARGET_URL, wait_until="domcontentloaded", timeout=60000)
+    page.goto(TARGET_URL, wait_until="networkidle")
     print(f"✓ Browser started at {TARGET_URL} with size {WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 
     time.sleep(10)
@@ -84,10 +58,6 @@ def playwright_worker():
 
     page.mouse.click(913, 788)
     print("✓ Clicked at (913, 788)")
-    time.sleep(0.5)
-
-    page.mouse.click(988, 157)
-    print("✓ Clicked at (988, 157)")
     time.sleep(0.5)
 
     page.mouse.click(864, 162)
@@ -102,11 +72,6 @@ def playwright_worker():
 
     page.mouse.click(864, 258)
     print("✓ Clicked at (864, 258)")
-    time.sleep(2)
-
-    page.mouse.click(868, 275)
-    print("✓ Clicked at (868, 275)")
-    time.sleep(0.5)
     print("✓ Startup sequence complete")
 
     while True:
@@ -395,4 +360,4 @@ def click():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=43023, debug=False, threaded=True)
+    app.run(host="127.0.0.1", port=43023, debug=False, threaded=True)
