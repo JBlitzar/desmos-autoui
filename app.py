@@ -78,6 +78,10 @@ def playwright_worker():
     print("✓ Clicked at (913, 788)")
     time.sleep(0.5)
 
+    page.mouse.click(988, 157)
+    print("✓ Clicked at (988, 157)")
+    time.sleep(0.5)
+
     page.mouse.click(864, 162)
     print("✓ Clicked at (864, 162)")
 
