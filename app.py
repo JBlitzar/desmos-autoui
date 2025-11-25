@@ -36,7 +36,12 @@ def playwright_worker():
     global browser, page, playwright_instance, context, latest_screenshot
 
     playwright_instance = sync_playwright().start()
-    browser = playwright_instance.firefox.launch(headless=True)
+    browser = playwright_instance.firefox.launch(
+        headless=True,
+        firefox_user_prefs={
+            "media.volume_scale": "0.0",  # Mute all audio
+        },
+    )
     context = browser.new_context(
         viewport={"width": WINDOW_WIDTH, "height": WINDOW_HEIGHT}
     )
@@ -114,11 +119,11 @@ def get_screenshot_jpeg():
 def should_process_request(endpoint):
     """Check if request should be processed or suppressed as duplicate"""
     current_time = time.time()
-    
+
     with request_lock:
         timestamps = request_timestamps[endpoint]
         timestamps[:] = [ts for ts in timestamps if current_time - ts < DEDUP_WINDOW]
-        
+
         if len(timestamps) % 2 == 0:
             timestamps.append(current_time)
             return True
@@ -130,20 +135,20 @@ def should_process_request(endpoint):
 def generate_mjpeg_stream():
     """Generate MJPEG stream - keep two most recent streams alive"""
     global active_streams
-    
+
     with stream_lock:
         active_streams += 1
         stream_id = active_streams
-    
+
     print(f"Stream {stream_id} started (active: {active_streams})")
-    
+
     try:
         while True:
             with stream_lock:
                 if stream_id < active_streams - 1:
                     print(f"Stream {stream_id} terminated (newer streams active)")
                     break
-            
+
             jpeg_bytes = get_screenshot_jpeg()
             if jpeg_bytes:
                 yield (
