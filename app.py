@@ -4,6 +4,7 @@ import time
 import threading
 from playwright.sync_api import sync_playwright
 from queue import Queue
+from collections import defaultdict
 
 app = Flask(__name__)
 CORS(app)
@@ -21,6 +22,13 @@ screenshot_queue = Queue(maxsize=1)
 command_queue = Queue()
 latest_screenshot = None
 screenshot_lock = threading.Lock()
+
+request_timestamps = defaultdict(list)
+request_lock = threading.Lock()
+DEDUP_WINDOW = 2.0
+
+active_streams = 0
+stream_lock = threading.Lock()
 
 
 def playwright_worker():
@@ -103,10 +111,39 @@ def get_screenshot_jpeg():
         return latest_screenshot if latest_screenshot else b""
 
 
+def should_process_request(endpoint):
+    """Check if request should be processed or suppressed as duplicate"""
+    current_time = time.time()
+    
+    with request_lock:
+        timestamps = request_timestamps[endpoint]
+        timestamps[:] = [ts for ts in timestamps if current_time - ts < DEDUP_WINDOW]
+        
+        if len(timestamps) % 2 == 0:
+            timestamps.append(current_time)
+            return True
+        else:
+            timestamps.append(current_time)
+            return False
+
+
 def generate_mjpeg_stream():
-    """Generate MJPEG stream"""
-    while True:
-        try:
+    """Generate MJPEG stream - keep two most recent streams alive"""
+    global active_streams
+    
+    with stream_lock:
+        active_streams += 1
+        stream_id = active_streams
+    
+    print(f"Stream {stream_id} started (active: {active_streams})")
+    
+    try:
+        while True:
+            with stream_lock:
+                if stream_id < active_streams - 1:
+                    print(f"Stream {stream_id} terminated (newer streams active)")
+                    break
+            
             jpeg_bytes = get_screenshot_jpeg()
             if jpeg_bytes:
                 yield (
@@ -114,9 +151,10 @@ def generate_mjpeg_stream():
                     b"Content-Type: image/jpeg\r\n\r\n" + jpeg_bytes + b"\r\n"
                 )
             time.sleep(0.033)
-        except Exception as e:
-            print(f"Stream error: {e}")
-            break
+    except Exception as e:
+        print(f"Stream {stream_id} error: {e}")
+    finally:
+        print(f"Stream {stream_id} ended")
 
 
 @app.route("/stream", methods=["GET"])
@@ -131,7 +169,8 @@ def stream():
 def toggle_w():
     """Toggle W key"""
     try:
-        command_queue.put({"action": "toggle_key", "key": "w"})
+        if should_process_request("tw"):
+            command_queue.put({"action": "toggle_key", "key": "w"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -144,7 +183,8 @@ def toggle_w():
 def toggle_a():
     """Toggle A key"""
     try:
-        command_queue.put({"action": "toggle_key", "key": "a"})
+        if should_process_request("ta"):
+            command_queue.put({"action": "toggle_key", "key": "a"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -157,7 +197,8 @@ def toggle_a():
 def toggle_s():
     """Toggle S key"""
     try:
-        command_queue.put({"action": "toggle_key", "key": "s"})
+        if should_process_request("ts"):
+            command_queue.put({"action": "toggle_key", "key": "s"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -170,7 +211,8 @@ def toggle_s():
 def toggle_d():
     """Toggle D key"""
     try:
-        command_queue.put({"action": "toggle_key", "key": "d"})
+        if should_process_request("td"):
+            command_queue.put({"action": "toggle_key", "key": "d"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -183,7 +225,8 @@ def toggle_d():
 def press_space():
     """Press space key"""
     try:
-        command_queue.put({"action": "press_key", "key": " "})
+        if should_process_request("pspace"):
+            command_queue.put({"action": "press_key", "key": " "})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -196,7 +239,8 @@ def press_space():
 def press_1():
     """Press 1 key"""
     try:
-        command_queue.put({"action": "press_key", "key": "1"})
+        if should_process_request("p1"):
+            command_queue.put({"action": "press_key", "key": "1"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -209,7 +253,8 @@ def press_1():
 def press_2():
     """Press 2 key"""
     try:
-        command_queue.put({"action": "press_key", "key": "2"})
+        if should_process_request("p2"):
+            command_queue.put({"action": "press_key", "key": "2"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -222,7 +267,8 @@ def press_2():
 def press_3():
     """Press 3 key"""
     try:
-        command_queue.put({"action": "press_key", "key": "3"})
+        if should_process_request("p3"):
+            command_queue.put({"action": "press_key", "key": "3"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -235,7 +281,8 @@ def press_3():
 def press_4():
     """Press 4 key"""
     try:
-        command_queue.put({"action": "press_key", "key": "4"})
+        if should_process_request("p4"):
+            command_queue.put({"action": "press_key", "key": "4"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -248,7 +295,8 @@ def press_4():
 def press_5():
     """Press 5 key"""
     try:
-        command_queue.put({"action": "press_key", "key": "5"})
+        if should_process_request("p5"):
+            command_queue.put({"action": "press_key", "key": "5"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -261,7 +309,8 @@ def press_5():
 def press_6():
     """Press 6 key"""
     try:
-        command_queue.put({"action": "press_key", "key": "6"})
+        if should_process_request("p6"):
+            command_queue.put({"action": "press_key", "key": "6"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -274,7 +323,8 @@ def press_6():
 def press_e():
     """Press E key"""
     try:
-        command_queue.put({"action": "press_key", "key": "e"})
+        if should_process_request("pe"):
+            command_queue.put({"action": "press_key", "key": "e"})
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -287,14 +337,15 @@ def press_e():
 def click():
     """Click at current mouse position or specified coordinates"""
     try:
-        x = request.args.get("x", type=int)
-        y = request.args.get("y", type=int)
-        if x is not None and y is not None:
-            command_queue.put({"action": "click", "x": x, "y": y})
-        else:
-            command_queue.put(
-                {"action": "click", "x": WINDOW_WIDTH // 2, "y": WINDOW_HEIGHT // 2}
-            )
+        if should_process_request("click"):
+            x = request.args.get("x", type=int)
+            y = request.args.get("y", type=int)
+            if x is not None and y is not None:
+                command_queue.put({"action": "click", "x": x, "y": y})
+            else:
+                command_queue.put(
+                    {"action": "click", "x": WINDOW_WIDTH // 2, "y": WINDOW_HEIGHT // 2}
+                )
         return Response(
             generate_mjpeg_stream(),
             mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -304,4 +355,4 @@ def click():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=43023, debug=False, threaded=True)
+    app.run(host="127.0.0.1", port=43023, debug=False, threaded=True)
