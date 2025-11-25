@@ -64,7 +64,7 @@ def playwright_worker():
         viewport={"width": WINDOW_WIDTH, "height": WINDOW_HEIGHT}
     )
     page = context.new_page()
-    page.goto(TARGET_URL, wait_until="networkidle")
+    page.goto(TARGET_URL, wait_until="domcontentloaded", timeout=60000)
     print(f"✓ Browser started at {TARGET_URL} with size {WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 
     time.sleep(10)
