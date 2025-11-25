@@ -1,0 +1,13 @@
+Browser should be 1728x894. 
+URL should be https://thelast.io
+Upon startup, after waiting 10s to load, go to 864, 162 and click. Wait a bit. 
+type "test", wait a bit
+Move to 864, 258 and click.
+
+Screenshot should be an mjpeg livestream. Any key press endpoint should also return the livestream, unless error thrown. Allow cors. 
+
+We need tw, ta, ts, td endpoints that toggle w,a,s,d
+pspace endpoint that presses space
+p1,p2,p3,p4,p5,p6 endpoints that press the 1,2,3,4,5,6 number keys
+pe endpoint to press e
+click endpoint that clicks
