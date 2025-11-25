@@ -94,6 +94,11 @@ def playwright_worker():
 
     page.mouse.click(864, 258)
     print("✓ Clicked at (864, 258)")
+    time.sleep(2)
+
+    page.mouse.click(868, 275)
+    print("✓ Clicked at (868, 275)")
+    time.sleep(0.5)
     print("✓ Startup sequence complete")
 
     while True:
