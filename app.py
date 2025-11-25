@@ -58,7 +58,15 @@ def playwright_worker():
     playwright_instance = sync_playwright().start()
     browser = playwright_instance.chromium.launch(
         headless=False,  # MUST be False with Xvfb
-        args=["--no-sandbox", "--disable-setuid-sandbox"],
+        args=[
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--use-gl=swiftshader",  # CPU-based WebGL
+            "--enable-webgl",
+            "--ignore-gpu-blocklist",
+            "--disable-gpu",  # Force software rendering
+            "--disable-software-rasterizer",  # But allow SwiftShader
+        ],
     )
     context = browser.new_context(
         viewport={"width": WINDOW_WIDTH, "height": WINDOW_HEIGHT}
