@@ -39,8 +39,12 @@ def playwright_worker():
     time.sleep(10)
     print("✓ Waited 10 seconds for page load")
 
+    page.mouse.click(758, 660)
+    print("✓ Clicked at (758, 660)")
+    time.sleep(0.5)
+
     page.mouse.click(913, 788)
-    print("✓ Clicked at (864, 162)")
+    print("✓ Clicked at (913, 788)")
     time.sleep(0.5)
 
     page.mouse.click(864, 162)
@@ -300,4 +304,4 @@ def click():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8327, debug=False, threaded=True)
+    app.run(host="0.0.0.0", port=43023, debug=False, threaded=True)
