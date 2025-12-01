@@ -46,33 +46,37 @@ def playwright_worker():
         viewport={"width": WINDOW_WIDTH, "height": WINDOW_HEIGHT}
     )
     page = context.new_page()
-    page.goto(TARGET_URL, wait_until="networkidle")
-    print(f"✓ Browser started at {TARGET_URL} with size {WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+    page.goto(TARGET_URL, wait_until="networkidle", timeout=60000)
+    print(f"Browser started at {TARGET_URL} with size {WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 
     time.sleep(10)
-    print("✓ Waited 10 seconds for page load")
+    print("Waited 10 seconds for page load")
 
     page.mouse.click(758, 660)
-    print("✓ Clicked at (758, 660)")
+    print("Clicked (1)")
     time.sleep(0.5)
 
     page.mouse.click(913, 788)
-    print("✓ Clicked at (913, 788)")
+    print("Clicked (2)")
     time.sleep(0.5)
 
     page.mouse.click(864, 162)
-    print("✓ Clicked at (864, 162)")
+    print("Clicked (3)")
 
     time.sleep(0.5)
 
     page.keyboard.type("test")
-    print("✓ Typed 'test'")
+    print("Entered name 'test'")
 
     time.sleep(0.5)
 
     page.mouse.click(864, 258)
-    print("✓ Clicked at (864, 258)")
-    print("✓ Startup sequence complete")
+    print("Clicked (4) to join")
+    print("Startup sequence complete")
+
+    import webbrowser
+
+    webbrowser.open("https://www.desmos.com/calculator/cobdsixn2j")
 
     while True:
         if not command_queue.empty():
