@@ -46,7 +46,8 @@ def playwright_worker():
         viewport={"width": WINDOW_WIDTH, "height": WINDOW_HEIGHT}
     )
     page = context.new_page()
-    page.goto(TARGET_URL, wait_until="networkidle", timeout=60000)
+    print("waiting until network idle...")
+    page.goto(TARGET_URL, wait_until="networkidle", timeout=0)
     print(f"Browser started at {TARGET_URL} with size {WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 
     time.sleep(10)
